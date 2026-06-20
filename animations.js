@@ -62,9 +62,12 @@ document.addEventListener('DOMContentLoaded', () => {
   );
   document.querySelectorAll('a[href^="#"]').forEach(a => {
     a.addEventListener('click', function(e) {
+      const href = this.getAttribute('href');
+      // Só faz smooth scroll para âncoras internas (ex: #rpa, #contact)
+      // Links externos (https://, mailto:, wa.me etc.) nunca devem ser bloqueados
+      if (!href || href.length <= 1 || !document.querySelector(href)) return;
       e.preventDefault();
-      const t = document.querySelector(this.getAttribute('href'));
-      if (t) t.scrollIntoView({ behavior:'smooth', block:'start' });
+      document.querySelector(href).scrollIntoView({ behavior:'smooth', block:'start' });
     });
   });
 
@@ -274,17 +277,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const cfg = simConfig[name];
     if (!cfg) return;
 
-    // Show overlay
+    // Mostra o overlay
     overlay.classList.add('open');
     document.body.style.overflow = 'hidden';
 
-    // Activate correct panel
+    // Ativa o painel correto
     simPanels.forEach(p => p.classList.remove('active'));
     document.getElementById('sim-' + name).classList.add('active');
     simTitle.textContent = cfg.title;
 
-    // Run animation
-    cfg.fn();
+    // Aguarda a transição CSS do modal terminar antes de iniciar a animação
+    // Isso elimina o 'travamento' visual ao abrir
+    setTimeout(() => cfg.fn(), 360);
   }
 
   function closeSim() {
