@@ -304,8 +304,13 @@ document.addEventListener('DOMContentLoaded', () => {
     auto:       { title:'credito_omnichannel.exe — em execução', fn: runSimAuto },
   };
 
+  let simStartTimer = null; // Timer nativo rastreado separadamente
+
   function openSim(name) {
+    // Cancela qualquer timer de início pendente
+    if (simStartTimer) { clearTimeout(simStartTimer); simStartTimer = null; }
     clearSim();
+
     const cfg = simConfig[name];
     if (!cfg) return;
 
@@ -315,37 +320,50 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Ativa o painel correto
     simPanels.forEach(p => p.classList.remove('active'));
-    document.getElementById('sim-' + name).classList.add('active');
+    const panel = document.getElementById('sim-' + name);
+    if (!panel) return;
+    panel.classList.add('active');
     simTitle.textContent = cfg.title;
 
-    // Aguarda a transição CSS do modal terminar antes de iniciar a animação
-    // Isso elimina o 'travamento' visual ao abrir
-    setTimeout(() => cfg.fn(), 360);
+    // Mostra loading spinner dentro do modal
+    const loader = document.createElement('div');
+    loader.className = 'sim-loader';
+    loader.id = 'sim-active-loader';
+    loader.innerHTML = `
+      <div style="display:flex;flex-direction:column;align-items:center;gap:14px;">
+        <svg class="btn-spinner" style="width:28px;height:28px;" viewBox="0 0 24 24" fill="none" stroke="var(--neon-cyan)" stroke-width="2">
+          <circle cx="12" cy="12" r="10" stroke-opacity="0.2"/>
+          <path d="M12 2a10 10 0 0 1 10 10" stroke-linecap="round"/>
+        </svg>
+        <span style="font-family:var(--font-mono);font-size:0.65rem;color:var(--text-muted);">Iniciando simulação...</span>
+      </div>`;
+    loader.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:5;';
+    panel.appendChild(loader);
+
+    // Timer RASTREADO — será cancelado por clearSim ou ao trocar de simulação
+    simStartTimer = setTimeout(() => {
+      simStartTimer = null;
+      const l = document.getElementById('sim-active-loader');
+      if (l) l.remove();
+      try { cfg.fn(); } catch(err) { console.error('Erro na simulação:', err); }
+    }, 400);
   }
 
   function closeSim() {
+    // Cancela timer de início pendente
+    if (simStartTimer) { clearTimeout(simStartTimer); simStartTimer = null; }
     clearSim();
     overlay.classList.remove('open');
     document.body.style.overflow = '';
+    // Limpa todos os painéis e loaders
+    simPanels.forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.sim-loader').forEach(l => l.remove());
   }
 
-  // Button listeners — com estado de loading
+  // Button listeners — simples e sem bloquear o botão
   document.querySelectorAll('.card-sim-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      // Mostra spinner no botão
-      const originalHTML = btn.innerHTML;
-      btn.innerHTML = '<svg class="btn-spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10" stroke-opacity="0.25"/><path d="M12 2a10 10 0 0 1 10 10" stroke-linecap="round"/></svg> Carregando...';
-      btn.style.opacity = '0.7';
-      btn.disabled = true;
-
-      openSim(btn.dataset.sim);
-
-      // Restaura o botão após o modal abrir
-      setTimeout(() => {
-        btn.innerHTML = originalHTML;
-        btn.style.opacity = '';
-        btn.disabled = false;
-      }, 420);
+    btn.addEventListener('click', function() {
+      openSim(this.dataset.sim);
     });
   });
   closeBtn.addEventListener('click', closeSim);
