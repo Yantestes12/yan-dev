@@ -10,22 +10,25 @@
    ========================================================== */
 ;(function() {
   function bindExternalLink(id, url) {
-    // Tenta agora e também após o DOM carregar (dupla garantia)
     function attach() {
       const el = document.getElementById(id);
       if (!el) return;
+      // Força abertura via window.open — não depende do href nativo
       el.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
         e.stopImmediatePropagation();
-        // Deixa o href nativo funcionar — sem preventDefault
-      }, true); // capture=true: dispara antes de qualquer outro handler
+        window.open(url, '_blank', 'noopener,noreferrer');
+      }, true);
+      // Também seta href como fallback
       el.setAttribute('href', url);
       el.setAttribute('target', '_blank');
       el.setAttribute('rel', 'noopener noreferrer');
     }
+    // Tenta imediatamente E após DOM carregar
+    attach();
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', attach);
-    } else {
-      attach();
     }
   }
   bindExternalLink('link-linkedin', 'https://www.linkedin.com/in/yan-oliveira-185922215');

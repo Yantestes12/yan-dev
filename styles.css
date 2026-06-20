@@ -889,12 +889,13 @@ button { cursor:pointer; border:none; background:none; font-family:inherit; colo
   background:var(--bg-card); border:1px solid var(--glass-border);
   font-size:0.8rem; font-weight:500; color:var(--text-secondary);
   transition:all var(--transition-fast); backdrop-filter:blur(8px);
+  position:relative; z-index:10; pointer-events:auto; cursor:pointer;
 }
 .footer-link:hover {
   border-color:var(--neon-green); color:var(--neon-green);
   box-shadow:0 0 18px rgba(0,255,136,0.1); transform:translateY(-2px);
 }
-.footer-link svg { width:15px; height:15px; fill:currentColor; }
+.footer-link svg { width:15px; height:15px; fill:currentColor; pointer-events:none; }
 .footer-bottom {
   padding-top:28px; border-top:1px solid var(--glass-border);
   font-size:0.68rem; color:var(--text-muted);
