@@ -282,6 +282,11 @@ button { cursor:pointer; border:none; background:none; font-family:inherit; colo
 .card-sim-btn svg {
   width:14px; height:14px; fill:currentColor;
 }
+.btn-spinner {
+  width:14px; height:14px; fill:none;
+  animation:spin-fast 0.7s linear infinite;
+  flex-shrink:0;
+}
 
 
 /* ============================================================

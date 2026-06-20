@@ -3,6 +3,35 @@
    Card mini-animations + Modal simulation system
    ============================================================ */
 
+/* ==========================================================
+   LINKS EXTERNOS — PRIORIDADE MÁXIMA
+   Registrado ANTES do DOMContentLoaded para garantir que
+   nenhum outro handler interfira no clique.
+   ========================================================== */
+;(function() {
+  function bindExternalLink(id, url) {
+    // Tenta agora e também após o DOM carregar (dupla garantia)
+    function attach() {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.addEventListener('click', function(e) {
+        e.stopImmediatePropagation();
+        // Deixa o href nativo funcionar — sem preventDefault
+      }, true); // capture=true: dispara antes de qualquer outro handler
+      el.setAttribute('href', url);
+      el.setAttribute('target', '_blank');
+      el.setAttribute('rel', 'noopener noreferrer');
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', attach);
+    } else {
+      attach();
+    }
+  }
+  bindExternalLink('link-linkedin', 'https://www.linkedin.com/in/yan-oliveira-185922215');
+  bindExternalLink('link-whatsapp', 'https://wa.me/5522997984140');
+})();
+
 document.addEventListener('DOMContentLoaded', () => {
 
   /* ==========================================================
@@ -297,9 +326,24 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.style.overflow = '';
   }
 
-  // Button listeners
+  // Button listeners — com estado de loading
   document.querySelectorAll('.card-sim-btn').forEach(btn => {
-    btn.addEventListener('click', () => openSim(btn.dataset.sim));
+    btn.addEventListener('click', () => {
+      // Mostra spinner no botão
+      const originalHTML = btn.innerHTML;
+      btn.innerHTML = '<svg class="btn-spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10" stroke-opacity="0.25"/><path d="M12 2a10 10 0 0 1 10 10" stroke-linecap="round"/></svg> Carregando...';
+      btn.style.opacity = '0.7';
+      btn.disabled = true;
+
+      openSim(btn.dataset.sim);
+
+      // Restaura o botão após o modal abrir
+      setTimeout(() => {
+        btn.innerHTML = originalHTML;
+        btn.style.opacity = '';
+        btn.disabled = false;
+      }, 420);
+    });
   });
   closeBtn.addEventListener('click', closeSim);
   overlay.addEventListener('click', (e) => { if (e.target === overlay) closeSim(); });
